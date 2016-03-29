@@ -42,7 +42,7 @@ function start(){
 }
 
 function exit( msg){
-	log.err({'exit message ' : msg },' Exiting app');
+	log.error({'exit message ' : msg },' Exiting app');
 	process.exit(1);
 }
 

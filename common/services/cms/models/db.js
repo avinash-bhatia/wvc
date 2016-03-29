@@ -9,7 +9,7 @@ var _d			= $.Deferred()  ,
 	connection	= mongoose.connection  ;
 
 connection.on('error', function( err){
-	log.err('connection to database: '+ config.mongo + ', failed.');
+	log.error('connection to database: '+ config.mongo + ', failed.');
 	_d.reject( err);
 });
 connection.on('disconnected',function(){
