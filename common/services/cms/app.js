@@ -15,12 +15,13 @@ var app 	= express()  ,
 
 app.use( bodyParser.json() );
 
+app.use( log.req_logger);		// added 1st
+
 app.use('/user/v1', account);
 
 app.use('/content/v1', core);
 
-app.use( log.req_logger);
-app.use( log.err_logger);
+app.use( log.err_logger);		// added last
 
 app.use( function(err, req, res, next) {
 	res.status( err.status || 500);
