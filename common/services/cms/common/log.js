@@ -22,7 +22,7 @@ function serializer (req, res) {
 }
 
 log.req_logger = function (req, res, next) {
-	req.log = log.child({ req_id : req.req_id });
+	req.log = log.child({ req_id : req.req_id });					// _may be used to log things with request id; not being used, yet_
 	req.log.info({ req : serializer (req, res) }, 'http request');
 	next();
 };
