@@ -1,9 +1,13 @@
-var Docker = require('dockerode') ;
+var Docker	= require('dockerode') ,
+	config	= require('common/config') ,
+	log		= require('common/log') ;
 
 var docker		= new Docker() ,
-	image		= 'wiziq/session:v2.2',
-	abs_path	= '/home/pawan/vcnew/wvc/common/session/v2' ,
-	internal_port = 3179 ;
+	image		= config.image ,
+	port		= config.internal_port ,
+	host_dir	= config.session_dir ,
+	mount_name	= config.mount_name ;
+	
 
 var	list		= {} ;
 
@@ -13,11 +17,11 @@ function start( info){
 
 	docker.run(image, [], process.stdout,
 	   {
-		   Binds	: [ abs_path + ":/session" ],
+		   Binds	: [ host_dir + ":" + mount_name ],
 		   detached	: true ,
 		   interactive: true,
 		   tty		: true ,
-		   publish	: internal_port ,
+		   publish	: port ,
 		   name		: 'pawan_' 
 	   },
 	   function( err, data, container){		// not called immediately if no error

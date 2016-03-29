@@ -12,7 +12,7 @@ var app			= express() ,
 
 //docker.start();
 
-container.fire();
+container.fire();//{ name: 'kritik'});
 
 app.listen( port);
 

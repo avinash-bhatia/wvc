@@ -12,13 +12,15 @@ var image		= config.image ,
 
 function create( info, cb){
 	info = info || {};
-	docker.createContainer({ 
+	log.debug('container name: '+ info.name);
+	var opts = {
 		name	: info.name,
 		tty		: true,
 		publish	: port,
 		Image	: image,
-//	   	Volume	:{ host_dir : mount_name}
-	}, cb);									// cb( err, container)
+		Binds	: [ host_dir + ":" + mount_name ]
+	};
+	docker.createContainer( opts, cb);						// cb( err, container)
 }
 		
 function attach( container, cb){
@@ -26,20 +28,19 @@ function attach( container, cb){
 		stream: true, 
 		stdout: true,
 		stderr: true
-	}, cb);									// cb( err, stream)
+	}, cb);													// cb( err, stream)
 	//stream.pipe( process.stdout);
 }
 				
 function start( container, cb){
 	log.debug('Binds: ' + host_dir + ":" + mount_name );
-	container.start({
-	   "Binds":[ host_dir + ":"+ mount_name]
-	}, cb);									// cb( err, data)
+	container.start( null, cb);								// cb( err, data) 
 }
 
-function fire( cb){
+function fire( info, cb){
+	info = info | {};
 	cb = cb || function(){};
-	create({ name: 'temp'}, function(err, container){
+	create({ name: info.name }, function(err, container){
 		log.info({ err: err, container: container}, 'created container');
 		if( err){
 			return cb(err);
@@ -49,7 +50,7 @@ function fire( cb){
 			if( err){
 				return cb(err);
 			}
-			stream.pipe( process.stdout);
+			//stream.pipe( process.stdout);					// enable  < logs --follow >
 			start( container, function( err, data){
 				log.info({ err: err, data: data}, 'started container');
 				if( err){
