@@ -78,7 +78,15 @@ define(function(require) {
 		$anchor_lib.find('span.busy').fadeOut();
 	}
 	function handle_error (err) {
-		log.error (err, 'TODO: handle this error');
+
+		/* show in all open libraries */
+		var lib_instances = $('#widget-tabs').find('.content-lib-main');
+		for (var i = 0; i < lib_instances.length; i++) {
+			var $anchor_lib = $(lib_instances[i]);
+
+			$anchor_lib.find('.busy').css('display', 'none');
+			$anchor_lib.find('.content-lib-error').css('display', 'inline').html(err);
+		}
 	}
 
 	function get_content (email) {
@@ -116,7 +124,6 @@ define(function(require) {
 		 *     thumbnail : ...
 		 */
 
-		log.info ('adding ', info);
 		$anchor_lib.find('.content-lib-items ul').append(library_item);
 	}
 
@@ -145,6 +152,7 @@ define(function(require) {
 
 	function handle_new_content (ev, data) {
 		switch (ev) {
+
 			case 'content-added' : 
 				var tab    = $(data.tab);
 				var url    = data.conv_url;

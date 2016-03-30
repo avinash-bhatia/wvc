@@ -128,6 +128,14 @@ define(function(require) {
 			msg_q[seq]._d = _d;
 		}
 
+		/*
+		 * The socket.send does not throw any exception if the socket is closed (bad api). */
+		if (sock.readyState !== 1) {
+			if (ack)
+				return _d.reject ('socket unavailable : state = ' + sock.readyState);
+			return false;
+		}
+
 		sock.send (JSON.stringify(message));
 
 		if (ack)
@@ -223,6 +231,7 @@ define(function(require) {
 		/*
 		 * Do nothing here. React in the on_close handle
 		 */
+		log.error ('socket send error:', ev);
 	}
 
 	function on_close (ev) {

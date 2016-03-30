@@ -17,10 +17,6 @@
 
 }
 
-.content-upload-input {
-	height : auto;
-}
-
 @label-height : 60px;
 .content-upload-control {
     width: 100%;
@@ -30,16 +26,24 @@
 
 	span.fileinput-button {
 		position: relative;
-		top : calc(~'100% - @{library-height}');
-		transform: translateY(-50%);
+		top : 40%;
 		display: block;
 		overflow: visible;
 		height : 120px;
 
-		span.content-upload-label {
-			display: block;
+		input.content-upload-input, span.content-upload-label {
 			height: @label-height;
 			width: 200px;
+		}
+
+		input.content-upload-input {
+			position : relative;
+			top : -@label-height;
+			margin : auto auto;
+		}
+
+		span.content-upload-label {
+			display: block;
 			font-weight: bold;
 			font-size: large;
 			text-align: center;

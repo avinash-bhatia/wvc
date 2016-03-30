@@ -13,9 +13,10 @@ define(function(require){
 		listener 	= require('./listener');
 
 	var att = {},
-		f_handle = framework.handle('att-list');
+		f_handle = framework.handle('att-list'),
+		templates = [];
 	
-	att.init = function( display_spec, custom, perms){
+	att.init = function( display_spec, custom, perms ) {
 		var _d = $.Deferred();
 
 		if( !display_spec.anchor || display_spec.templates.length != 2){
@@ -23,8 +24,7 @@ define(function(require){
 			return _d.promise();
 		}
 
-		var templates = [],
-			anchor = display_spec.anchor,
+		var anchor = display_spec.anchor,
 			trigger= $('#nav-attendees'); 	//i should be getting it from the framework instead
 		
 		templates.push( f_handle.template(display_spec.templates[0]) );
@@ -43,11 +43,16 @@ define(function(require){
 		return _d.promise();
 	};
 
-	att.start = function(){
+	att.start = function () {
+		/*
+		 * Set the local user first */
+		widget.set_local_user ($.extend(true, f_handle.identity), templates);
+
+		/*
+		 * Now set the remote users */
 		var users = f_handle.attendees.get_users(); 
-		log.info('attendee info:: '+ Object.toString( users));
 		Object.keys(users).forEach( function(key){
-			widget.add_user( users[key].identity);
+			widget.add_user( $.extend(true, users[key].identity));
 		});
 	};
 

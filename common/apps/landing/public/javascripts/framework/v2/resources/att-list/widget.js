@@ -13,14 +13,16 @@ define( function(require){
 	
 		log = logger;	
 		$anchor = $(anchor);			/* just search once */
-		var wrapper_tpt = templates[0];
-		format(identity);				/* make fit for template */
-		$anchor.append( wrapper_tpt( identity) );
-		$('#atl-search input').attr("placeholder",'No One To Search..');
 		user_tpt = templates[1];
 		
 		_d.resolve();
 		return _d.promise();
+	};
+
+	widget_att.set_local_user = function (user, templates) {
+		var wrapper_tpt = templates[0];
+		format (user);				/* make fit for template */
+		$anchor.append (wrapper_tpt (user));
 	};
 
 	widget_att.add_user = function(user){
@@ -51,7 +53,7 @@ define( function(require){
 		first && first.ack();		/* first time visible ack */
 	};
 
-	widget_att.remove_user = function( vc_id){
+	widget_att.remove_user = function(vc_id) {
 		$('#'+vc_id + my_namespace).remove();
 		search.update();			// is it needed? 
 	};
@@ -60,23 +62,27 @@ define( function(require){
 		var avatar_def = "http://www.gravatar.com/avatar/?d=mm&s=40",
 			t_join;
 
-		if( user.history){
+		if ( user.history ) {
 			var temp = $(user.history).get(-1);		/* get last joined ( the latest one) */
 			
-			temp ? (temp = temp.joined) : temp;
-			var _d = new Date( temp),
-				_h = _d.getHours(),
-				_m = _d.getMinutes();
-		
-			_m = ( _m<10)? '0'+_m : _m;		/* zero padding */	
-			t_join = _h + ':' + _m;
+			if (!temp.joined)
+				t_join = 'not known';
+			else {
+				var _d = new Date (temp.joined),
+					_h = _d.getHours(),
+					_m = _d.getMinutes();
+
+					_hx = _h > 12 ? _h - 12: _h;
+					_m  = _m < 10 ? '0'+_m : _m;		/* zero padding */	
+					t_join = _hx + ':' + _m + (_h < 13 ? ' am' : ' pm');
+			}
 		}
 
 		user.avatar = user.photos ? user.photos[0].value : avatar_def;
-		user.time	= "Joined: " + (t_join || "---");
-		user.email 	= user.emails ? user.emails[0].value  : "-----" ;
-		user.authvia= user.authvia || "---";
+		user.time	= t_join;
+		user.email 	= user.emails ? user.emails[0].value  : "no email";
 		user.att_id = user.vc_id + my_namespace;
+		user.authvia= user.authvia || "not known";
 	}
 
 	var first = {					/* things to be done after _first_user_join */
@@ -85,7 +91,7 @@ define( function(require){
 			
 			first = null;
 		}	
-	}
+	};
 	
 	return widget_att;
 });

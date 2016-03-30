@@ -16,6 +16,7 @@ define(function(require) {
 		identity.vc_id = user_info.vc_id;
 		identity.nickname = user_info.nickname;
 		identity.displayName = user_info.displayName;
+		identity.history = user_info.history;
 		identity.full_user_info = user_info;
 	};
 

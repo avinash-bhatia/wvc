@@ -4,37 +4,51 @@
 
 #atl-header {
 	width: 100%;
-	height: 8%;
 	background: #222;
 	text-align : center;
 	span {
 		color : white;
 		font-size : x-large;
 	}
+	padding : 2px;
 }
 
+@margin-side : 10px;
+@search_height : 34px;
 #atl-search {
-	@size : 6%;
 	width : 100%;
-	height: @size;
+	padding-left: @margin-side;
+	padding-right: @margin-side;
+	display : table;
+
 	svg {
 		fill: white;
-	    height: calc( ~'@{size} - 10px');
-	    width: calc( ~'@{size} - 10px');
-	    padding-top: 5px;
-		margin-right : 5px;
+	    height: 30px;
+	    width: 30px;
+	    padding: 0px;
+		margin-top : 10px;
+		margin-right : 10px;
 	}
 
+	svg, span {
+		display : inline-block;
+	}
+
+	span {
+		position : relative;
+		top : -5px;
+	}
 	input {
-		height : 100%;
+		line-height : 1.1em;
+		font-size : 1.5em;
+		margin-bottom : 10px;
 		border: none;
 		background: inherit;
-		color : whitesmoke;
+		color : #555;
 		outline: none;
 		padding : 0;
-		width : calc(~'100% - @{size}');
+		width : 100%;
 	}
-	.border-bottom;
 }
 
 #atl-list-wrap{
@@ -51,20 +65,18 @@
 }
 
 @avatar-width : 3em;
-@margin-side : 10px;
 
 .atl-me{
-	border-bottom : 1px solid black;
+	background-color : rgba(0, 0, 0, 0.7);
 	min-height : 50px;
 	height : 50px;
 }
 .atl-me,
 .atl-list-item {
 	display : block;
-	position : relative;
-	top : 8px;
-	//margin-right  : @margin-side;
-	margin-left  : @margin-side;
+	margin : 0;
+	padding-left  : @margin-side;
+	padding-top  : 5px;
 
 	.atl-avatar-wrap {
 		height : @avatar-width;
@@ -85,13 +97,14 @@
 	width : calc(~'100% - @{avatar-width} - 2*@{margin-side}');
 	padding-left : 10px;
 	padding-top : 2px;
+	color : white;
 
 	.atl-user-meta-header {
 		width : 100%;
 		padding : 0;
 		margin : 0;
 		display : block;
-		height : 1.3em;
+		height : 1.5em;
 
 		span.atl-username {
 			font-size : 1.1em;
@@ -99,8 +112,12 @@
 		}
 
 		time.atl-join-time {
+			&:before {
+				content: 'Joined : ';
+			}
 			font-size : .8em;
 			float: right;
+			line-height : 1.8em;
 		}
 	}
 
@@ -119,6 +136,7 @@
 
 		span.atl-authvia {
 			font-size : .7em;
+			font-style: italic;
 			float: right;
 		}
 	}
