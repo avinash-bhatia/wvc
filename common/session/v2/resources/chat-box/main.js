@@ -186,7 +186,7 @@ function create_user(username, password, user_info, log) {
 					user_info.emails.length > 0 ? user_info.emails[0].value : username + '-pseudo@webrtc.vc'
 					): username + '-pseudo@webrtc.vc';*/
 	var email = username + '-pseudo@webrtc.vc';
-	var display_name = user_info.displayName;
+	var display_name = user_info.displayName.trim();
 	var first_name = display_name.split(' ')[0];
 	var last_name = display_name.split(' ')[1] || '*';
 	var chat_data = { 
@@ -228,7 +228,7 @@ function login_to_letsChat( username, password ){
 		try{
 			if( response && response.headers ){
 				final_cookie = JSON.stringify(response.headers['set-cookie'] );
-				final_cookie = final_cookie.substr(2, final_cookie.indexOf(';') - 2);
+				final_cookie = final_cookie.substr(2, final_cookie.indexOf(' Path=/; HttpOnly"]') - 3);
 				_d.resolve( final_cookie  );
 			}
 			else{
@@ -236,7 +236,7 @@ function login_to_letsChat( username, password ){
 			}
 		}
 		catch( e){
-			_d.reject('error reading cookie');
+			_d.reject('error reading cookie :' + e);
 		}
 		
 	}).on('timeout', function(){
