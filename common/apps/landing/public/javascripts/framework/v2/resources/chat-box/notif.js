@@ -78,11 +78,20 @@ define(function(require){
 		notif = notif.join(' ');        /* avoids extra st  ring objs and executes faster than '+' */
 		log.info( notif );
 		/* fill notification area */
-		$('.lcb-notification-bar').html(notif);
+		$('.lcb-notification-bar').html( escape_html(notif));
 	}
 	
 	function time_now(){
 		return Date.now();
+	}
+
+	function escape_html( text){
+		return text.replace(/[\"&'\/<>]/g, function (a) {
+												return {
+													'"': '&quot;', '&': '&amp;', "'": '&#39;',
+													'/': '&#47;',  '<': '&lt;',  '>': '&gt;'
+												}[a];
+										   });
 	}
 
 	return typing;
