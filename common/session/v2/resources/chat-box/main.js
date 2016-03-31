@@ -236,7 +236,7 @@ function login_to_letsChat( username, password ){
 			}
 		}
 		catch( e){
-			_d.reject('error reading cookie');
+			_d.reject('error reading cookie :' + e);
 		}
 		
 	}).on('timeout', function(){
