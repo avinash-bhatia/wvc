@@ -228,7 +228,7 @@ function login_to_letsChat( username, password ){
 		try{
 			if( response && response.headers ){
 				final_cookie = JSON.stringify(response.headers['set-cookie'] );
-				final_cookie = final_cookie.substr(2, final_cookie.indexOf(';') - 2);
+				final_cookie = final_cookie.substr(2, final_cookie.indexOf(' Path=/; HttpOnly"]') - 3);
 				_d.resolve( final_cookie  );
 			}
 			else{
