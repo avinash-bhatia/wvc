@@ -15,36 +15,68 @@ define(function(require) {
 	player.init = function (display_spec, custom, perms, f_handle) {
 		f_handle_cached = f_handle;
 		init_handlers ();
+
+		Crocodoc.addPlugin('scrolltooffset', function (scope) {
+		    var viewerConfig = scope.getConfig(),
+		        layout;
+
+		    return {
+				init : function (config) {
+					var api = scope.getConfig().api;
+
+					api.getZoom = function () {
+						var layout = viewerConfig.currentLayout;
+						var zoom = layout.state.zoomState.zoom;
+						return zoom;
+					};
+
+					api.scrollToOffset = function (left, top, remote_zoom) {
+						var layout = viewerConfig.currentLayout;
+						var local_zoom = layout.state.zoomState.zoom;
+						log.info ('scrollToOffset: ', left, top, remote_zoom, local_zoom);
+						layout.scrollToOffset (left * local_zoom / remote_zoom, top * local_zoom / remote_zoom);
+					};
+				}
+			};
+		});
+
 		return true;
 	};
 
 	player.start = function (anchor, content_uri, options) {
 		var viewer;
-		var anchor_id = $(anchor).attr('id');
+		var $anchor = $(anchor);
+		var anchor_id = $anchor.attr('id');
 		var _d = $.Deferred ();
 
-		tab_set_mode($(anchor), 'loading');
-		player.destroy ($(anchor));
+		tab_set_mode($anchor, 'loading');
+		player.destroy ($anchor);
 
 		/*
 		 * Load the player template */
 		var template = f_handle_cached.template('player');
 		var content_area_id = make_content_area_id (anchor_id);
-		$(anchor).append(template({ 
+		$anchor.append(template({ 
 			content_area_id   : content_area_id,
 			content_uri       : content_uri,
 			show_menu         : options.show_menu,
 			shared            : options.shared && (options.shared ? 'yes' : 'no' )|| 'no'
 		}));
 
-		var content_area = $(anchor).find('.content-area');
+		var content_area = $anchor.find('.content-area');
 
 		if (!content_uri) {
 			log.error ('null content_uri');
 			content_uri = default_content_uri;
 		}
 
-		viewer = Crocodoc.createViewer (content_area, { url: content_uri });
+		viewer = Crocodoc.createViewer (content_area, { 
+			url: content_uri,
+			plugins : {
+				scrolltooffset : {
+				},
+			}
+		});
 		viewer.load();
 		viewer_list[content_area_id] = {
 			handle : viewer
@@ -66,13 +98,13 @@ define(function(require) {
 			try {
 				/*
 				 * This will sometimes throw an exception. Catch it and move on */
-				viewer.setLayout(Crocodoc.LAYOUT_PRESENTATION);
+				viewer.setLayout(Crocodoc.LAYOUT_VERTICAL_SINGLE_COLUMN);
 			}
 			catch (e) {
 			}
 
 			var mode = options.mode ? options.mode : 'fullview';
-			tab_set_mode($(anchor), mode);
+			tab_set_mode($anchor, mode);
 
 			try {
 				log.info ('scrolling to ' + options.page);
@@ -92,7 +124,16 @@ define(function(require) {
 		});
 
 		viewer.on('pagefocus', function (ev) {
-			handle_page_focus ($(anchor), ev);
+			handle_page_focus ($anchor, ev);
+		});
+
+		viewer.on('scrollstart', function (ev) {
+			log.info ('scrollstart : left = ' + ev.data.scrollLeft + ', top = ' + ev.data.scrollTop);
+		});
+
+		viewer.on('scrollend', function (ev) {
+			log.info ('scrollend : left = ' + ev.data.scrollLeft + ', top = ' + ev.data.scrollTop);
+			handle_continuous_scroll.call ($anchor, $anchor.find('.content-player-outer'), viewer, ev);
 		});
 
 		return _d.promise ();
@@ -122,6 +163,14 @@ define(function(require) {
 		viewer.handle.scrollTo (info.page);
 	};
 
+	player.scroll_to = function (anchor, info) {
+		var content_area_id = $(anchor).find('.content-area').attr('id');
+		var viewer = get_viewer (content_area_id);
+
+		log.info ('scroll to : left = ' + info.scroll_to.scrollLeft + ', top = ' + info.scroll_to.scrollTop);
+		viewer.handle.scrollToOffset (info.scroll_to.scrollLeft, info.scroll_to.scrollTop, info.zoom);
+	};
+
 	function make_content_area_id (anchor_id) {
 		return 'content-area-' + anchor_id	;
 	}
@@ -144,6 +193,13 @@ define(function(require) {
 		 */
 		$('#widget-tabs').on('click', '.content-player-outer .content-menu ul li.content-page-nav', function (ev) {
 			handle_page_navigation (ev);
+		});
+
+		/*
+		 * Handlers for layout change
+		 */
+		$('#widget-tabs').on('click', '.content-player-outer .content-menu ul li.content-layout-toggle', function (ev) {
+			handle_layout_change (ev);
 		});
 
 		/*
@@ -204,6 +260,58 @@ define(function(require) {
 
 			f_handle_cached.send_info ('*', 'navigate-to', msg_data, 0);
 		}
+	}
+
+	/*
+	 * ----------------------------
+	 * Continuous scroll
+	 * ----------------------------
+	 */
+	function handle_continuous_scroll ($content_area, viewer, ev) {
+		var $tab_anchor = this;
+
+		if ($content_area.attr('data-is-shared') === 'yes') {
+			var uuid = $tab_anchor.attr('data-tab-uuid');
+
+			log.info ('viewer', viewer.handle);
+			var msg_data = {
+				uuid : uuid,
+				scroll_to : ev.data,
+				zoom : viewer.getZoom()
+			};
+
+			f_handle_cached.send_info ('*', 'scroll-to', msg_data, 0);
+		}
+	}
+
+	/*
+	 * ----------------------------
+	 * Layout change
+	 * ----------------------------
+	 */
+	var layouts = [
+		{ layout : Crocodoc.LAYOUT_VERTICAL_SINGLE_COLUMN, tooltip : 'Vertical, Single Column, Scrollable' },
+		{ layout : Crocodoc.LAYOUT_HORIZONTAL,             tooltip : 'Horizontal, Single Row, Scrollable' },
+		{ layout : Crocodoc.LAYOUT_PRESENTATION,           tooltip : 'Presentation, One page at a time' },
+		{ layout : Crocodoc.LAYOUT_PRESENTATION_TWO_PAGE,  tooltip : 'Presentation, Two pages at a time' }
+	];
+	var curr_layout_index = 0;
+
+	function handle_layout_change (ev) {
+		var curr = $(ev.currentTarget);
+		var content_area_id = curr.closest('ul').attr('data-content-area-id');
+		var viewer = get_viewer (content_area_id);
+
+		if (!viewer)
+			return;
+
+		curr_layout_index = (curr_layout_index + 1) % (layouts.length);
+		viewer.handle.setLayout (layouts[curr_layout_index].layout);
+
+		/* Change tooltip */
+		$(ev.currentTarget).find('span.tooltip-text').html(layouts[curr_layout_index].tooltip);
+
+		/* If this is shared then do remote sync */
 	}
 
 	/*

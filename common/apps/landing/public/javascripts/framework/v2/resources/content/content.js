@@ -44,6 +44,9 @@ define(function(require) {
 			case 'navigate-to' :
 				return handle_remote_page_navigation (info);
 
+			case 'scroll-to' :
+				return handle_remote_page_scroll (info);
+
 			default :
 				log.error ('received unknown info_id (' + info_id + '). Ignoring.');
 				return;
@@ -129,6 +132,17 @@ define(function(require) {
 		}
 
 		player.navigate (handle.anchor, info);
+	}
+
+	function handle_remote_page_scroll (info) {
+
+		var handle = f_handle.tabs.get_by_uuid (info.uuid);
+		if (!handle) {
+			log.error ('rx remote scroll for non-existent tab : uuid = ' + info.uuid);
+			return;
+		}
+
+		player.scroll_to (handle.anchor, info);
 	}
 
 	return content;
