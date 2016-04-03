@@ -39,6 +39,7 @@ define(function(require) {
 				info.remote_slave = true;
 				info.show_menu = false;
 				info.shared = false;
+				info.disable_scrolling = true;
 				return handle_remote_new_content (info);
 
 			case 'navigate-to' :
@@ -59,6 +60,7 @@ define(function(require) {
 		for (var uuid in sess_info.shared) {
 			var i_am = f_handle.identity.vc_id;
 			var remote_slave = sess_info.shared[uuid].owner === i_am ? false : true;
+			var disable_scrolling = remote_slave ? true : false;
 
 			/*
 			 * If this content was originally shared by me, then create a library 'behind'
@@ -80,7 +82,8 @@ define(function(require) {
 				show_menu : remote_slave ? false : true,
 				shared : remote_slave ? false : true,
 				page : sess_info.shared[uuid].page,
-				startup : true
+				startup : true,
+				disable_scrolling : disable_scrolling,
 			});
 		}
 
@@ -117,7 +120,8 @@ define(function(require) {
 			shared : info.shared,
 			show_menu : info.show_menu,
 			mode : 'fullview',
-			page : info.page || 1
+			page : info.page || 1,
+			disable_scrolling : info.disable_scrolling || false
 		};
 
 		player.start (handle.anchor, info.content_uri, options);

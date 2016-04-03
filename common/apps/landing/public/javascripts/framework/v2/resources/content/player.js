@@ -72,6 +72,7 @@ define(function(require) {
 
 		viewer = Crocodoc.createViewer (content_area, { 
 			url: content_uri,
+			enableDragging : false,
 			plugins : {
 				scrolltooffset : {
 				},
@@ -114,6 +115,10 @@ define(function(require) {
 				/* Ignore - some documents result in scroll errors */
 				log.info ('unable to scroll [' + content_uri + ']: reason : ', e);
 			}
+
+			/* Disable scrolling if specified */
+			if (options.disable_scrolling)
+				$anchor.find('.crocodoc-viewport').css('overflow', 'hidden');
 
 			current_page = ev.data.page;
 			var data = {
