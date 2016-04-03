@@ -23,21 +23,22 @@ define( function(require){
 		return _d.promise();
 	};
 
-	controls.change = function( vc_id, key, val){
+	controls.change = function (vc_id, key, val) {
 		state[vc_id] = state[vc_id] || {};
-		switch( state[vc_id][key]){
+
+		switch (state[vc_id][key]) {
 			case undefined:							/* initial state of the control */
-				change_control( vc_id, key, val);	/* decides which icon to show (on/off) */
-				change_state(vc_id, key);
+				change_control (vc_id, key, val);	/* decides which icon to show (on/off) */
+				change_state (vc_id, key);
 				break;
 
 			case 'set':
-				change_control( vc_id, key, val);	/* seems like someone else changed the value of some control */
+				change_control (vc_id, key, val);	/* seems like someone else changed the value of some control */
 				break;
 
 			case 'busy':							/* this must be the ack/nack to our req. */
-				change_control( vc_id, key, val);	
-				change_state(vc_id, key);
+				change_control (vc_id, key, val);	
+				change_state (vc_id, key);
 				break;		
 		}
 	};
@@ -48,25 +49,25 @@ define( function(require){
 		 * and dom elements cache */
 		state[vc_id] = undefined;
 		_dom.forget(vc_id); 
-	}
+	};
 
 	/*
 	 * private methods */
 
 	function control_clicked ( evt ) {
 		var id = $(this).closest('li').attr('id');
-		if( !id){
+		if (!id) {
 			log.info('warn:::user id not found...did someone change the user template?');
 			return false; 
 		}
 	
-		var vc_id = id.replace( my_namespace, ''),
+		var vc_id = id.replace (my_namespace, ''),
 			ele   = $(this).attr('id'),
 			key	  = ele.replace('-slashed','');
 			val   = undefined;
 
 		state[vc_id] = state[vc_id] || {};
-		if( state[vc_id][key] == 'busy' || state[vc_id][key] == undefined ){
+		if( state[vc_id][key] === 'busy' || state[vc_id][key] === undefined ){
 			log.info('attempted to change while in \'busy/undef\' state. Is a problem, control shouldn\'t be clickable');
 			return false;
 		}
@@ -89,10 +90,11 @@ define( function(require){
 				return;
 		}
 
-		if( val){
-			attendee_api.set_meta( vc_id, key, val, true);			/* 'true' tells it is a request */
-			change_state(vc_id, key);
+		if (val) {
+			attendee_api.set_meta (vc_id, key, val, true);			/* 'true' tells it is a request */
+			change_state (vc_id, key);
 		}
+
 		log.info(vc_id+ ' key: '+ key + ', to be val:'+val+', on_click');
 	}
 	
@@ -121,9 +123,12 @@ define( function(require){
 		 *		2. set		 ----> busy
 		 *		3. busy 	 ----> set */
 		//handle audio -control wala case
+		
 		var el_on = _dom.handle( vc_id, key),
-			el_off = _dom.handle( vc_id, key+'-slashed');
-		switch( state[vc_id][key]){
+			el_off = _dom.handle( vc_id, key + '-slashed');
+
+		switch (state[vc_id][key]) {
+
 			case undefined:
 			case 'busy':
 				/* change to set */

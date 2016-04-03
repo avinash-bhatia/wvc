@@ -44,7 +44,7 @@
 		margin-bottom : 10px;
 		border: none;
 		background: inherit;
-		color : #555;
+		color : white;
 		outline: none;
 		padding : 0;
 		width : 100%;
@@ -67,16 +67,17 @@
 @avatar-width : 3em;
 
 .atl-me{
-	background-color : rgba(0, 0, 0, 0.7);
-	min-height : 50px;
-	height : 50px;
+	//background-color : rgba(0, 0, 0, 0.7);
+	//background-color : rgba(255, 100, 0, 0.3);
+	background-color : fadeout(#006488, 10%);
 }
 .atl-me,
 .atl-list-item {
 	display : block;
 	margin : 0;
 	padding-left  : @margin-side;
-	padding-top  : 5px;
+	padding-top  : 10px;
+	padding-bottom  : 10px;
 
 	.atl-avatar-wrap {
 		height : @avatar-width;
@@ -87,6 +88,11 @@
 		float : left;
 
 		img.atl-avatar {
+			height : 100%;
+			width : 100%;
+		}
+
+		svg {
 			height : 100%;
 			width : 100%;
 		}
@@ -151,8 +157,7 @@
 		#vu-meter{
 			height : 1em;
 			width  : 100px;
-			background: rgba(167,152,152,0.35);
-			border-radius:10px;
+			//background: rgba(167,152,152,0.35);
 			#audio-control{
 				height : inherit;
 				width : 0;

@@ -59,7 +59,7 @@ define( function(require){
 	};
 
 	function format( user){
-		var avatar_def = "http://www.gravatar.com/avatar/?d=mm&s=40",
+		var avatar_def = "/landing/images/user.svg",
 			t_join;
 
 		if ( user.history ) {
@@ -78,11 +78,11 @@ define( function(require){
 			}
 		}
 
-		user.avatar = user.photos ? user.photos[0].value : avatar_def;
-		user.time	= t_join;
-		user.email 	= user.emails ? user.emails[0].value  : "no email";
-		user.att_id = user.vc_id + my_namespace;
-		user.authvia= user.authvia || "not known";
+		user.avatar  = user.photos ? user.photos[0].value : null;
+		user.time	 = t_join;
+		user.email 	 = user.emails ? user.emails[0].value  : "no email";
+		user.att_id  = user.vc_id + my_namespace;
+		user.authvia = user.authvia || "not known";
 	}
 
 	var first = {					/* things to be done after _first_user_join */

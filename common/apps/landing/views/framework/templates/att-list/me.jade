@@ -1,6 +1,9 @@
 .atl-me
 	.atl-avatar-wrap(style="display: inline-block;")
-		img.atl-avatar(src="#{avatar}")
+		if avatar
+			img.atl-avatar(src="#{avatar}")
+		else
+			include images/user.svg
 	.atl-user-meta(style="display:inline-block")
 		.atl-user-meta-header.wiziq-border-warning.border-bottom
 			span.atl-username.text-warning #{displayName} (Me)
