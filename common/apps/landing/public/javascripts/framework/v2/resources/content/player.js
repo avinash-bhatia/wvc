@@ -70,6 +70,9 @@ define(function(require) {
 			content_uri = default_content_uri;
 		}
 
+		/* Add tooltip */
+		//add_tooltip ($anchor.attr('data-tab-uuid'));
+
 		viewer = Crocodoc.createViewer (content_area, { 
 			url: content_uri,
 			enableDragging : false,
@@ -78,6 +81,7 @@ define(function(require) {
 				},
 			}
 		});
+
 		viewer.load();
 		viewer_list[content_area_id] = {
 			handle : viewer
@@ -107,14 +111,9 @@ define(function(require) {
 			var mode = options.mode ? options.mode : 'fullview';
 			tab_set_mode($anchor, mode);
 
-			try {
-				log.info ('scrolling to ' + options.page);
-				viewer.scrollTo (options.page || 1);
-			}
-			catch (e) {
-				/* Ignore - some documents result in scroll errors */
-				log.info ('unable to scroll [' + content_uri + ']: reason : ', e);
-			}
+			/* Set page/scroll position */
+			if (options.scroll_info)
+				scroll_to_position (viewer, options.scroll_info, content_uri);
 
 			/* Disable scrolling if specified */
 			if (options.disable_scrolling)
@@ -410,6 +409,31 @@ define(function(require) {
 		for (var _mode in modes) {
 			if (_mode != mode)
 				$tab_anchor.removeClass('content-' + _mode);
+		}
+	}
+
+	function scroll_to_position (viewer, info, content_uri) {
+
+		try {
+			log.info ('scroll info', info);
+
+			switch (info.type) {
+				case 'page':
+					viewer.scrollTo (info.data || 1);
+					break;
+
+				case 'scroll_to':
+					viewer.scrollToOffset (
+						info.data.scroll_to.scrollLeft,
+						info.data.scroll_to.scrollTop,
+						info.data.zoom
+					);
+					break;
+			}
+		}
+		catch (e) {
+			/* Ignore - some documents result in scroll errors */
+			log.info ('unable to scroll [' + content_uri + ']: reason : ', e);
 		}
 	}
 

@@ -81,7 +81,7 @@ define(function(require) {
 				remote_slave : remote_slave,
 				show_menu : remote_slave ? false : true,
 				shared : remote_slave ? false : true,
-				page : sess_info.shared[uuid].page,
+				scroll_info : sess_info.shared[uuid].scroll_info,
 				startup : true,
 				disable_scrolling : disable_scrolling,
 			});
@@ -120,7 +120,7 @@ define(function(require) {
 			shared : info.shared,
 			show_menu : info.show_menu,
 			mode : 'fullview',
-			page : info.page || 1,
+			scroll_info : info.scroll_info,
 			disable_scrolling : info.disable_scrolling || false
 		};
 

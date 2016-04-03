@@ -89,9 +89,9 @@ define(function(require) {
 		}));
 
 		var res = {
-			anchor : content_top.find('div.tab-pane#' + id)[0],
-			id     : id,
-			uuid   : options.uuid
+			anchor    : content_top.find('div.tab-pane#' + id)[0],
+			id        : id,
+			uuid      : options.uuid
 		};
 
 		ul_top.find('li a#' + id).tab('show');
@@ -110,6 +110,18 @@ define(function(require) {
 
 		var li = ul_top.find('li[data-tab-uuid=' + uuid + ']');
 		li.addClass('tab-is-shared');
+	};
+
+	tabs.set_tooltip = function (res, options) {
+		if (!options.html)
+			return false;
+
+		var uuid = res.handle.uuid;
+		var li   = ul_top.find ('li[data-tab-uuid="' + uuid + '"]');
+		var div  = li.find ('div.tooltip-content');
+
+		div.append (options.html);
+		div.addClass ('active');
 	};
 
 	tabs.show = function (options) {

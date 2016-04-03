@@ -18,47 +18,53 @@ define(function(require) {
 	/*
 	 * This is called upon the creation of a new tab */
 	upload.prepare = function (initial_data) {
-		var anchor       = initial_data.anchor;
-		var email        = initial_data.email;
-		var upload_span  = anchor.find ('.content-upload-label');
-		var upload_input = anchor.find ('.content-upload-input');
-		var upload_error = anchor.find ('.content-upload-error');
-		var status_span  = anchor.find ('.content-upload-status');
-		var progress     = anchor.find ('.progress');
+		var working_data = {};
+		working_data.anchor       = initial_data.anchor;
+		working_data.email        = initial_data.email;
+		working_data.upload_span  = working_data.anchor.find ('.content-upload-label');
+		working_data.upload_input = working_data.anchor.find ('.content-upload-input');
+		working_data.upload_error = working_data.anchor.find ('.content-upload-error');
+		working_data.status_span  = working_data.anchor.find ('.content-upload-status');
+		working_data.progress     = working_data.anchor.find ('.progress');
 
-		upload_span.on('click', function (ev) {
+		working_data.upload_span.on('click', function (ev) {
 			upload_input.trigger('click');
 		});
 
-		upload_input.on('click', function (ev) {
-			update_status (status_span, '');
+		working_data.upload_input.on('click', function (ev) {
+			update_status (working_data, '');
 			upload_input.val(null);
 		});
 
-		upload_input.on('change', function (ev) {
+		working_data.upload_input.on('change', function (ev) {
 			var files = $(ev.currentTarget)[0].files;
 			if (!files || files.length === 0)
 				return;
 
-			clear_error (upload_error);
-			init_progress_bar (progress);
-			update_status (status_span, 'Requesting ...');
+			disable_input (working_data);
+			clear_error (working_data);
+			init_progress_bar (working_data);
+			update_status (working_data, 'Requesting ...');
 
-			get_presigned_url (email, files[0])
-				.then (upload_start.bind(null, files, progress, status_span),     handle_error.bind('Request Failed', status_span, progress, upload_error))
-				.then (upload_complete.bind(null, files, anchor, status_span),    handle_error.bind('Upload Failed', status_span, progress, upload_error))
-				.then (start_conversion.bind(null, email, files, anchor, status_span),
-					                                                              handle_error.bind('Upload Failed', status_span, progress, upload_error))
-				.then (inform_library.bind(null, initial_data),                   handle_error.bind('Conversion Failed', status_span, progress, upload_error))
-				.then (finish.bind(null, status_span),                            handle_error.bind('Post Conversion Failed', status_span, progress, upload_error));
+			working_data.file = files[0];
+
+			get_presigned_url (working_data)
+				.then (upload_start.bind(working_data),                 handle_error.bind('Request Failed', working_data))
+				.then (upload_complete.bind(working_data),              handle_error.bind('Upload Failed', working_data))
+				.then (start_conversion.bind(working_data),             handle_error.bind('Upload Failed', working_data))
+				.then (inform_library.bind(working_data, initial_data), handle_error.bind('Conversion Failed', working_data))
+				.then (finish.bind(working_data),                       handle_error.bind('Post Conversion Failed', working_data));
 		});
 	};
 
-	function update_status (status_span, text) {
-		status_span.html(text);
+	function update_status (working_data, text) {
+		working_data.status_span.html(text);
 	}
 
-	function handle_error (status_span, progress, error_span, err) {
+	function handle_error (working_data, err) {
+
+		enable_input (working_data);
+
 		/*
 		 * If, say, the 'get_presigned_url' fails, this handler will be called in 
 		 * a cascade, but thankfully with null error parametes the subsequent times */
@@ -66,20 +72,26 @@ define(function(require) {
 			return;
 
 		if (this)
-			update_status (status_span, this);
+			update_status (working_data, this);
 
 		if (err && err.error_message)
 			err = err.error_message;
 
-		vanish_progress_bar (progress, err);
-		mark_error (error_span, err);
+		vanish_progress_bar (working_data.progress, err);
+		mark_error (working_data, err);
 	}
 
-	function finish (status_span) {
-		update_status (status_span, '');
+	function finish (working_data) {
+		enable_input ();
+		update_status (working_data, '');
 	}
 
-	function mark_error (error_span, err) {
+	function disable_input () {
+		/* TODO */
+	}
+
+	function mark_error (working_data, err) {
+		var error_span = working_data.error_span;
 		var err_str = (typeof err === 'object' ? 'Server Error' : err);
 
 		log.error ('mark_error : err = ', err);
@@ -87,47 +99,50 @@ define(function(require) {
 		error_span.css('display', 'block');
 	}
 
-	function clear_error (error_span) {
-		error_span.html ('');
-		error_span.css('display', 'none');
+	function clear_error (working_data) {
+		working_data.error_span.html ('');
+		working_data.error_span.css('display', 'none');
 	}
 
-	function upload_start (files, progress, status_span, data) {
+	function upload_start (data) {
+		/*
+		 * 'this' is the working_data */
+
 		var _d = $.Deferred ();
-		var file_obj = files[0];
+		var file_obj = this.file;
 
 		log.info ('upload_start : data = ', data);
 
 		var xhr = new XMLHttpRequest();
 		xhr.open ("PUT", data.upload_url);
 		xhr.setRequestHeader('x-amz-acl', 'public-read');
-		xhr.upload.addEventListener ("progress", update_progress.bind (null, progress));
+		xhr.upload.addEventListener ("progress", this.update_progress.bind (null, this));
 		xhr.onload = function() {
 			if (xhr.status !== 200) {
 				_d.reject ('upload failed with status code ' + xhr.status);
-				vanish_progress_bar (progress, xhr.status);
+				vanish_progress_bar (this.progress, xhr.status);
 				return;
 			}
 
 			_d.resolve (data, file_obj);
-			vanish_progress_bar (progress, null);
+			vanish_progress_bar (this.progress, null);
 		};
 		xhr.onerror = function(err) {
 			log.error ('upload_start: err = ', err);
-			update_status (status_span, 'Upload Failed');
+			update_status (working_data, 'Upload Failed');
 			_d.reject(err);
 		};
 		xhr.send(file_obj);
-		update_status (status_span, 'Uploading ...');
+		update_status (working_data, 'Uploading ...');
 
 		return _d.promise ();
 	}
 
-	function init_progress_bar (progress) {
-		progress.find('.progress-bar').removeClass('progress-bar-danger');
-		progress.find('.progress-bar').removeClass('progress-bar-success');
-		progress.find('.progress-bar').css('width', '0%');
-		progress.fadeIn(500);
+	function init_progress_bar (working_data) {
+		working_data.progress.find('.progress-bar').removeClass('progress-bar-danger');
+		working_data.progress.find('.progress-bar').removeClass('progress-bar-success');
+		working_data.progress.find('.progress-bar').css('width', '0%');
+		working_data.progress.fadeIn(500);
 	}
 	function vanish_progress_bar (progress, err) {
 		progress.find('.progress-bar').addClass('progress-bar-' + (err ? 'danger' : 'success'));
@@ -135,16 +150,20 @@ define(function(require) {
 		progress.fadeOut(500);
 	}
 
-	function update_progress (progress, evt) {
+	function update_progress (working_data, evt) {
 		if (evt.lengthComputable === true){
 			var percentage_upload = (evt.loaded/evt.total)*100;
-			progress.find('.progress-bar').css('width', parseInt (evt.loaded / evt.total * 100, 10) + '%');
+			working_data.find('.progress-bar').css('width', parseInt (evt.loaded / evt.total * 100, 10) + '%');
 		}
 	}
 
-	function upload_complete (files, anchor, status_span, data, file_obj){
+	function upload_complete (data, file_obj){
+
+		/*
+		 * 'this' is the working_data */
+
 		var _d = $.Deferred ();
-		update_status (status_span, 'Finalizing upload ...');
+		update_status (this, 'Finalizing upload ...');
 
 		var key = 'upload_complete';
 		var value = {
@@ -160,24 +179,28 @@ define(function(require) {
 			tags            : 'content, pdf'
 		};
 
-		anchor.find('.content-conversion-busy').css('display', 'block');
+		this.anchor.find('.content-conversion-busy').css('display', 'block');
 		f_handle_cached.send_command (null, key, value, 0)
-		.then (
-			function (arg) {
-				_d.resolve (data, arg);
-			},
-			function (err) {
-				_d.reject (err);
-				update_status (status_span, 'Upload Complete Info Error.');
-			}
-		);
+			.then (
+				function (arg) {
+					_d.resolve (data, arg);
+				},
+				function (err) {
+					_d.reject (err);
+					update_status (this, 'Upload Complete Info Error.');
+				}
+			);
 
 		return _d.promise ();
 	}
 
-	function start_conversion (email, files, anchor, status_span, data, file_obj){
+	function start_conversion (data, file_obj) {
+
+		/*
+		 * 'this' is the working data */
+
 		var _d = $.Deferred ();
-		update_status (status_span, 'Processing ...');
+		update_status (this, 'Processing ...');
 
 		var key = 'start-conversion';
 		var value = {
@@ -186,27 +209,27 @@ define(function(require) {
 			type		    : file_obj.type,
 			size      	    : file_obj.size,
 			url             : data.access_url,
-			user_id		    : email,
+			user_id		    : this,
 			vc_id 		    : f_handle_cached.identity.vc_id,
 			u_name 		    : f_handle_cached.identity.id,
 			tags		    : 'content, pdf'
 		};
 
-		anchor.find('.content-conversion-busy').css('display', 'block');
+		this.anchor.find('.content-conversion-busy').css('display', 'block');
 		f_handle_cached.send_command (null, key, value, 0)
 			.then (
 				function (arg) {
 					_d.resolve (data, arg);
-					update_status (status_span, 'Conversion Finished');
+					update_status (this, 'Conversion Finished');
 				},
 				function (err) {
 					_d.reject (err);
-					update_status (status_span, 'Conversion Failed');
+					update_status (this, 'Conversion Failed');
 				}
 			)
 			.always (
 				function () {
-					anchor.find('.content-conversion-busy').css('display', 'none');
+					this.anchor.find('.content-conversion-busy').css('display', 'none');
 				}
 			);
 
@@ -239,13 +262,14 @@ define(function(require) {
 		return 'content-area-' + anchor_id	;
 	}
 
-	function get_presigned_url (email, file) {
+	function get_presigned_url (working_data) {
+		var file = working_data.file;
 		var key = 'get-tmp-url';
 		var val = {
 			path      : '/vctemp/' + encodeURI (file.name),
 			name      : file.name,
 			type      : file.type ? file.type : file.name.replace(/^.*\./g, ''),
-			user_id   : email
+			user_id   : working_data.email
 		};
 
 		log.info ('get_presigned_url: sending ', val);

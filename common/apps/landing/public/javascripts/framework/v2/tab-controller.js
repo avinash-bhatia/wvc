@@ -115,6 +115,7 @@ define(function(require) {
 			create      : create,
 			get_by_uuid : get_by_uuid,
 			sync_remote : sync_remote,
+			set_tooltip : set_tooltip,
 
 			/*
 			 * Generally called by the tab-controller resource */
@@ -216,7 +217,22 @@ define(function(require) {
 		controller.handle.sync_remote (options);
 
 		now_showing ({ uuid : uuid });
+	}
 
+	function set_tooltip (options) {
+		var uuid = options.uuid;
+
+		if (!uuid) {
+			log.error ('set_tooltip: null uuid (' + mod_name + '). likley programmatic error.');
+			return false;
+		}
+
+		if (!uuid_array[uuid]) {
+			log.error ('set_tooltip: no tab for uuid "' + uuid + '" (' + mod_name + '). likley programmatic error.');
+			return false;
+		}
+
+		controller.handle.set_tooltip (uuid_array[uuid], options);
 	}
 
 	function check_controller_methods (_module) {
@@ -226,6 +242,7 @@ define(function(require) {
 			__check(_module.name, 'create',      _module.handle.create);
 			__check(_module.name, 'destroy',     _module.handle.destroy);
 			__check(_module.name, 'sync_remote', _module.handle.sync_remote);
+			__check(_module.name, 'set_tooltip', _module.handle.set_tooltip);
 			__check(_module.name, 'show',        _module.handle.show);
 		}
 		catch (err) {

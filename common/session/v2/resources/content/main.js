@@ -80,7 +80,7 @@ content.relay_info = function (from, to, id, info) {
 			return doc_map_navigate_to (from, to, info);
 
 		case 'scroll-to':
-			return doc_map_sroll_by (from, to, info);
+			return doc_map_scroll_to (from, to, info);
 
 		case 'content-destroyed':
 			return doc_map_remove (from, to, info);
@@ -112,18 +112,24 @@ function doc_map_navigate_to (from, to, info) {
 	}
 
 	log.info ({ page : info.page, uuid : info.uuid }, 'set current page');
-	shared_docs_map[info.uuid].page = info.page;
+	shared_docs_map[info.uuid].scroll_info = {
+		type : 'page',
+		data : info.page
+	};
 	return true;
 }
 
-function doc_map_sroll_by (from, to, info) {
+function doc_map_scroll_to (from, to, info) {
 	if (!shared_docs_map[info.uuid]) {
-		log.error ({ from: from, to: to, info: info, method: 'doc_map_sroll_by '}, 'non-existent uuid');
+		log.error ({ from: from, to: to, info: info, method: 'doc_map_scroll_to '}, 'non-existent uuid');
 		return false;
 	}
 
-	log.info ({ info : info, uuid : info.uuid }, 'scroll');
-	shared_docs_map[info.uuid].page = info.page;
+	log.info ({ info : info, uuid : info.uuid }, 'scroll to');
+	shared_docs_map[info.uuid].scroll_info = {
+		type : 'scroll_to',
+		data : info
+	};
 	return true;
 }
 
