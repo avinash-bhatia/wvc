@@ -164,6 +164,7 @@ define(function(require) {
 		var content_area_id = $(anchor).find('.content-area').attr('id');
 		var viewer = get_viewer (content_area_id);
 
+		log.info ('navigate to : ' + info.page, info);
 		viewer.handle.scrollTo (info.page);
 	};
 

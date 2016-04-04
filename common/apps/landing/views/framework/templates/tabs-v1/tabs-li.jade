@@ -1,12 +1,12 @@
 if active
   li.active(role="presentation", data-tab-uuid=uuid, data-mod-name=module_name)
     a.tooltip.tab-name(href='#' + id, aria-controls=id, role="tab", data-toggle="tab") #{display_name}
-      div.tooltip-content
+      div.tooltip-content(style="display:none;")
     if !disable_close
       span.fa.fa-times-circle
 else
   li(role="presentation", data-tab-uuid=uuid, data-mod-name=module_name)
     a.tooltip.tab-name(href='#' + id, aria-controls=id, role="tab", data-toggle="tab") #{display_name}
-      div.tooltip-content
+      div.tooltip-content(style="display:none;")
     if !disable_close
       span.fa.fa-times-circle
