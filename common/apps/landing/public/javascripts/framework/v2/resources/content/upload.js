@@ -23,17 +23,19 @@ define(function(require) {
 		working_data.email        = initial_data.email;
 		working_data.upload_span  = working_data.anchor.find ('.content-upload-label');
 		working_data.upload_input = working_data.anchor.find ('.content-upload-input');
-		working_data.upload_error = working_data.anchor.find ('.content-upload-error');
+		working_data.error_span   = working_data.anchor.find ('.content-upload-error');
 		working_data.status_span  = working_data.anchor.find ('.content-upload-status');
 		working_data.progress     = working_data.anchor.find ('.progress');
+		working_data.busy         = working_data.anchor.find ('.content-conversion-busy');
 
 		working_data.upload_span.on('click', function (ev) {
-			upload_input.trigger('click');
+			working_data.upload_input.trigger('click');
 		});
 
 		working_data.upload_input.on('click', function (ev) {
+			clear_error (working_data);
 			update_status (working_data, '');
-			upload_input.val(null);
+			working_data.upload_input.val(null);
 		});
 
 		working_data.upload_input.on('change', function (ev) {
@@ -42,8 +44,7 @@ define(function(require) {
 				return;
 
 			disable_input (working_data);
-			clear_error (working_data);
-			init_progress_bar (working_data);
+			init_progress_bar (working_data.progress);
 			update_status (working_data, 'Requesting ...');
 
 			working_data.file = files[0];
@@ -81,13 +82,18 @@ define(function(require) {
 		mark_error (working_data, err);
 	}
 
-	function finish (working_data) {
-		enable_input ();
+	function finish () {
+		var working_data = this;
+		enable_input (working_data);
 		update_status (working_data, '');
 	}
 
-	function disable_input () {
-		/* TODO */
+	function disable_input (working_data) {
+		working_data.upload_input.prop('disabled', true);
+	}
+
+	function enable_input (working_data) {
+		working_data.upload_input.prop('disabled', false);
 	}
 
 	function mark_error (working_data, err) {
@@ -109,23 +115,24 @@ define(function(require) {
 		 * 'this' is the working_data */
 
 		var _d = $.Deferred ();
-		var file_obj = this.file;
+		var working_data = this;
+		var file_obj = working_data.file;
 
 		log.info ('upload_start : data = ', data);
 
 		var xhr = new XMLHttpRequest();
 		xhr.open ("PUT", data.upload_url);
 		xhr.setRequestHeader('x-amz-acl', 'public-read');
-		xhr.upload.addEventListener ("progress", this.update_progress.bind (null, this));
+		xhr.upload.addEventListener ("progress", update_progress.bind (null, working_data));
 		xhr.onload = function() {
 			if (xhr.status !== 200) {
 				_d.reject ('upload failed with status code ' + xhr.status);
-				vanish_progress_bar (this.progress, xhr.status);
+				vanish_progress_bar (working_data.progress, xhr.status);
 				return;
 			}
 
 			_d.resolve (data, file_obj);
-			vanish_progress_bar (this.progress, null);
+			vanish_progress_bar (working_data.progress, null);
 		};
 		xhr.onerror = function(err) {
 			log.error ('upload_start: err = ', err);
@@ -138,11 +145,11 @@ define(function(require) {
 		return _d.promise ();
 	}
 
-	function init_progress_bar (working_data) {
-		working_data.progress.find('.progress-bar').removeClass('progress-bar-danger');
-		working_data.progress.find('.progress-bar').removeClass('progress-bar-success');
-		working_data.progress.find('.progress-bar').css('width', '0%');
-		working_data.progress.fadeIn(500);
+	function init_progress_bar (progress) {
+		progress.find('.progress-bar').removeClass('progress-bar-danger');
+		progress.find('.progress-bar').removeClass('progress-bar-success');
+		progress.find('.progress-bar').css('width', '0%');
+		progress.fadeIn(500);
 	}
 	function vanish_progress_bar (progress, err) {
 		progress.find('.progress-bar').addClass('progress-bar-' + (err ? 'danger' : 'success'));
@@ -153,7 +160,7 @@ define(function(require) {
 	function update_progress (working_data, evt) {
 		if (evt.lengthComputable === true){
 			var percentage_upload = (evt.loaded/evt.total)*100;
-			working_data.find('.progress-bar').css('width', parseInt (evt.loaded / evt.total * 100, 10) + '%');
+			working_data.progress.find('.progress-bar').css('width', parseInt (evt.loaded / evt.total * 100, 10) + '%');
 		}
 	}
 
@@ -163,7 +170,8 @@ define(function(require) {
 		 * 'this' is the working_data */
 
 		var _d = $.Deferred ();
-		update_status (this, 'Finalizing upload ...');
+		var working_data = this;
+		update_status (working_data, 'Finalizing upload ...');
 
 		var key = 'upload_complete';
 		var value = {
@@ -179,7 +187,7 @@ define(function(require) {
 			tags            : 'content, pdf'
 		};
 
-		this.anchor.find('.content-conversion-busy').css('display', 'block');
+		working_data.busy.css('display', 'block');
 		f_handle_cached.send_command (null, key, value, 0)
 			.then (
 				function (arg) {
@@ -187,7 +195,7 @@ define(function(require) {
 				},
 				function (err) {
 					_d.reject (err);
-					update_status (this, 'Upload Complete Info Error.');
+					update_status (working_data, 'Upload Complete Info Error.');
 				}
 			);
 
@@ -200,7 +208,8 @@ define(function(require) {
 		 * 'this' is the working data */
 
 		var _d = $.Deferred ();
-		update_status (this, 'Processing ...');
+		var working_data = this;
+		update_status (working_data, 'Processing ...');
 
 		var key = 'start-conversion';
 		var value = {
@@ -209,27 +218,27 @@ define(function(require) {
 			type		    : file_obj.type,
 			size      	    : file_obj.size,
 			url             : data.access_url,
-			user_id		    : this,
+			user_id		    : working_data.email,
 			vc_id 		    : f_handle_cached.identity.vc_id,
 			u_name 		    : f_handle_cached.identity.id,
 			tags		    : 'content, pdf'
 		};
 
-		this.anchor.find('.content-conversion-busy').css('display', 'block');
+		working_data.busy.css('display', 'block');
 		f_handle_cached.send_command (null, key, value, 0)
 			.then (
 				function (arg) {
 					_d.resolve (data, arg);
-					update_status (this, 'Conversion Finished');
+					update_status (working_data, 'Conversion Finished');
 				},
 				function (err) {
 					_d.reject (err);
-					update_status (this, 'Conversion Failed');
+					update_status (working_data, 'Conversion Failed');
 				}
 			)
 			.always (
 				function () {
-					this.anchor.find('.content-conversion-busy').css('display', 'none');
+					working_data.busy.css('display', 'none');
 				}
 			);
 

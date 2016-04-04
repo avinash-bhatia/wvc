@@ -60,6 +60,14 @@
 .status-div {
     text-align: center;
     margin-top: 30px;
+
+	& span.content-upload-error {
+		font-family : inherit;
+
+		&:before {
+			font-family : FontAwesome;
+		}
+	}
 }
 
 .content-progress {
@@ -69,13 +77,6 @@
 	max-height : 40px;
 	position: absolute;
 	bottom : @library-height;
-	& span.content-upload-error {
-		font-family : inherit;
-		font-size : initial;
-
-		&:before {
-		}
-	}
 }
 
 .progress {
