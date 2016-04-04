@@ -1,7 +1,55 @@
 @import "./variables.less";
 @import "../../mixins/elements";
 
+@keyframes heartbeat {
+  0% {
+	fill : @brand-warning;
+    transform: scale(1.0, 1.0);
+  }
+  20% {
+	fill : @brand-danger;
+    transform: scale(1.2, 1.2);
+  }
+  100% {
+	fill : @brand-warning;
+    transform: scale(1.0, 1.0);
+  }
+}
+
 .atl-avatar-wrap svg {
 	fill : @brand-warning;
 	stroke : @brand-warning;
+}
+
+.atl-user-meta .atl-controls-bar {
+	.atl-control {
+		fill : @gray;
+		transition : all .3s ease-in-out;
+		cursor : initial;
+
+		&.att-state-set {
+			fill : @brand-warning;
+		}
+
+		&.att-state-set.slashed {
+			fill : @brand-danger;
+		}
+
+		&.att-state-busy {
+			fill : @brand-warning;
+			animation: heartbeat 0.52s ease-in-out infinite;
+		}
+
+		&.att-state-busy.slashed {
+			fill : @brand-danger;
+			animation: heartbeat 0.52s ease-in-out infinite;
+		}
+
+		&:hover, &.slashed:hover {
+			transform : scale(0.9, 0.9);
+			margin-right : 5px;
+			margin-left : 5px;
+		}
+
+	}
 }

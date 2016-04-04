@@ -171,6 +171,18 @@
 			display : inline-block;
 			z-index : 0;
 			fill : grey;
+
+			&.att-state-set.slashed, &.att-state-set {
+				&:hover {
+					cursor : pointer;
+				}
+			}
+	
+			&.att-state-busy.slashed, &.att-state-busy {
+				&:hover {
+					cursor : wait;
+				}
+			}
 	
 			& svg {
 				height : 1.3em;

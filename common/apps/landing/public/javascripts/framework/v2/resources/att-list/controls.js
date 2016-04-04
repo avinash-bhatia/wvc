@@ -17,30 +17,25 @@ define( function(require){
 		log = logger;
 		window.att_api = api; 	/* for testing purpose */
 		attendee_api = api;
-		$('#atl-list').on('click', '.atl-control', control_clicked);
+		$('body').on ('click', '#atl-list .atl-control', control_clicked);
 	
 		_d.resolve();
 		return _d.promise();
 	};
 
 	controls.change = function (vc_id, key, val) {
-		state[vc_id] = state[vc_id] || {};
 
-		switch (state[vc_id][key]) {
-			case undefined:							/* initial state of the control */
-				change_control (vc_id, key, val);	/* decides which icon to show (on/off) */
-				change_state (vc_id, key);
-				break;
-
-			case 'set':
-				change_control (vc_id, key, val);	/* seems like someone else changed the value of some control */
-				break;
-
-			case 'busy':							/* this must be the ack/nack to our req. */
-				change_control (vc_id, key, val);	
-				change_state (vc_id, key);
-				break;		
+		if (val !== true && val !== false) {
+			log.error ('controls.change: invalid value for val', val, 'expected "true" or "false"');
+			return;
 		}
+
+		state[vc_id]   = state[vc_id] || {};
+		var curr_state = state[vc_id][key];
+
+		switch_control_icon (vc_id, key, val);	/* decides which icon to show (on/off) */
+		change_state (vc_id, key, 'set');
+		return;
 	};
 
 	controls.forget = function( vc_id){
@@ -55,6 +50,7 @@ define( function(require){
 	 * private methods */
 
 	function control_clicked ( evt ) {
+
 		var id = $(this).closest('li').attr('id');
 		if (!id) {
 			log.info('warn:::user id not found...did someone change the user template?');
@@ -62,13 +58,14 @@ define( function(require){
 		}
 	
 		var vc_id = id.replace (my_namespace, ''),
-			ele   = $(this).attr('id'),
+			ele   = $(this).attr('data-id'),
 			key	  = ele.replace('-slashed','');
 			val   = undefined;
 
 		state[vc_id] = state[vc_id] || {};
-		if( state[vc_id][key] === 'busy' || state[vc_id][key] === undefined ){
-			log.info('attempted to change while in \'busy/undef\' state. Is a problem, control shouldn\'t be clickable');
+
+		if (state[vc_id][key] === 'busy' || !state[vc_id][key]) {
+			log.info ('attempted to change while in \'busy/undef\' state. Is a problem, control shouldn\'t be clickable');
 			return false;
 		}
 		
@@ -92,15 +89,15 @@ define( function(require){
 
 		if (val) {
 			attendee_api.set_meta (vc_id, key, val, true);			/* 'true' tells it is a request */
-			change_state (vc_id, key);
+			change_state (vc_id, key, 'busy');
 		}
 
-		log.info(vc_id+ ' key: '+ key + ', to be val:'+val+', on_click');
+		log.info (vc_id + ' key: ' + key + ', to be val:' + val + ', on_click');
 	}
 	
-	function change_control( vc_id, key, val){				/* set value */
+	function switch_control_icon (vc_id, key, val) {
 		
-		if( key == 'audio-control'){
+		if (key == 'audio-control') {
 			/* vu-meter is a special case */
 			var _ele = _dom.handle(vc_id, key);
 			_ele.css('width', val*100 + 'px');
@@ -111,43 +108,40 @@ define( function(require){
 		 * all others are similar
 		 * ---------------------- */
 		var _ele_on = _dom.handle(vc_id, key),
-			_ele_off= _dom.handle(vc_id, key+'-slashed');
+			_ele_off= _dom.handle(vc_id, key + '-slashed');
 	
-		( val) ? ( _ele_on.show().css('display','inline-block'), _ele_off.hide() )	
-			   : ( _ele_off.show().css('display','inline-block'), _ele_on.hide() );
+		var to_show =  val ? _ele_on : _ele_off;
+		var to_hide = !val ? _ele_on : _ele_off;
+
+		to_show.css('display', 'inline-block');
+		to_hide.css('display', 'none');
 	}
 
-	function change_state( vc_id, key, val){
+	function change_state (vc_id, key, __state) {
 		/* allowed state changes are:
 		 *		1. undefined ----> set
 		 *		2. set		 ----> busy
 		 *		3. busy 	 ----> set */
-		//handle audio -control wala case
 		
-		var el_on = _dom.handle( vc_id, key),
-			el_off = _dom.handle( vc_id, key + '-slashed');
-
-		switch (state[vc_id][key]) {
-
-			case undefined:
-			case 'busy':
-				/* change to set */
-				el_on.css('fill','green'); 
-				el_off.css('fill','red'); 
-				state[vc_id][key] = 'set';
-				break;
-
-			case 'set':
-				/* change to busy */
-				el_on.css('fill','yellow'); 
-				el_off.css('fill','yellow'); 
-				state[vc_id][key] = 'busy';
-				break;
-
-			default:
-				log.info("element found in some unknown state");
-				state[vc_id][key] = undefined;				/* what else can i do here */
+		if (__state !== 'busy' && __state !== 'set') {
+			log.error ('change_state: invalid state = ', __state);
+			return;
 		}
+
+		var el_on  = _dom.handle (vc_id, key),
+			el_off = _dom.handle (vc_id, key + '-slashed');
+
+		var add_class = 'att-state-' + __state;
+		var rem_class = (__state === 'busy' ? 'att-state-set' : 'att-state-busy');
+
+		el_on.addClass (add_class);
+		el_on.removeClass (rem_class);
+
+		el_off.addClass (add_class);
+		el_off.removeClass (rem_class);
+
+		state[vc_id][key] = __state;
+		return;
 	}
 
 	return controls;

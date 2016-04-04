@@ -4,24 +4,24 @@
 		#audio-control
 		img(src="/landing/images/vu-meter.png", style="position:absolute; z-index=2")
 
-	.atl-control#microphone
+	.atl-control(data-id="microphone")
 		include images/mic.svg
-	.atl-control#microphone-slashed(style="display:none")
+	.atl-control.slashed(style="display:none", data-id="microphone-slashed")
 		include images/mic-slashed.svg
 
-	.atl-control#camera
+	.atl-control(data-id="camera")
 		include images/camera.svg
-	.atl-control#camera-slashed(style="display:none")
+	.atl-control.slashed(style="display:none", data-id="camera-slashed")
 		include images/camera-slashed.svg
 
-	.atl-control#speaker
+	.atl-control(data-id="speaker")
 		include images/speaker.svg
 
-	.atl-control#play
+	.atl-control(data-id="play")
 		include images/play.svg
 
-	.atl-control#writing-control
+	.atl-control(data-id="writiing-control")
 		include images/writiing-disabled.svg
 	
-	.atl-control#kickout
+	.atl-control(data-id="kickout")
 		include images/kickout.svg
