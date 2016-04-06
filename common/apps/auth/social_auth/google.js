@@ -59,9 +59,11 @@ app.get('/account', ensure_authenticated, function(req, res) {
 			};
 
 			/* fetch all the necessary info from user/info */
-			var user_identity =  encode_google.get_user_details ( req.user );
+			var user_identity =  encode_google.get_user_details ( req.user, 'google' );
 			
-			res.cookie('wiziq_auth' , user_identity );
+			res.cookie('wiziq_auth' , user_identity, {
+				maxAge : 1000*60*60    /* expires in an hour */ 
+			} );
 			res.redirect(origin);
 		}
 		else{
