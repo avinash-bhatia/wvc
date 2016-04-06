@@ -3,21 +3,22 @@ var log            = require ( 'auth/common/log' ).child({ 'sub-module' : 'auth/
 
 var exports = module.exports = {};
 
-function get_user_details ( User )
+function get_user_details ( User, auth_via )
 {
-	identity.vc_auth_ts     = (new Date()).toISOString();
-	identity.id             = User.id || identity_defaultValues.id;
-	identity.displayName    = User.displayName || identity_defaultValues.displayName;
-	identity.name           = User.name || identity_defaultValues.name;
-	identity.nickname       = User.nickname || identity_defaultValues.nickname;
-	identity.birthday       = User.birthday || identity_defaultValues.birthday;
-	identity.anniversary    = User.anniversary || identity_defaultValues.anniversary;
-	identity.gender         = User.gender || identity_defaultValues.gender;
+	identity.vc_auth_ts     = new Date().toISOString().replace(/T/, ' ').replace(/\..+/, '');
+	identity.auth_via       = auth_via;
+	identity.id             = User.id || null;
+	identity.displayName    = User.displayName || null;
+	identity.name           = User.name || null;
+	identity.nickname       = User.nickname || null;
+	identity.birthday       = User.birthday || null;
+	identity.anniversary    = User.anniversary || null;
+	identity.gender         = User.gender || null;
 	identity.utcOffset      = new Date().getTimezoneOffset();
-	identity.emails         = User.emails || identity_defaultValues.emails;
-	identity.photos         = User.photos || identity_defaultValues.photos;
-	identity.addresses      = User.addresses || identity_defaultValues.addresses;
-	identity.phoneNumbers   = User.phoneNumbers || identity_defaultValues.phoneNumbers;
+	identity.emails         = User.emails || null;
+	identity.photos         = User.photos || null;
+	identity.addresses      = User.addresses || null;
+	identity.phoneNumbers   = User.phoneNumbers || null;
 
 	/* set primary attribute , if not set already */
 	setPrimaryAttribute(identity.emails);
@@ -31,6 +32,7 @@ function get_user_details ( User )
 	if( Buffer.byteLength( auth_string ) > MAX_SIZE_COOKIE ){
 		auth_string = "error: size_limit_exceeded";
 	}
+	log.info( {Info : auth_string},'Auth identity module');
 	/* encrypt user_info */
 	auth_string = encryption.encrypt ( log, auth_string );
 
@@ -41,13 +43,15 @@ function get_user_details ( User )
  * setting only the first entry as the primary one */
 function setPrimaryAttribute ( variable )
 {
+	if( variable === null )
+		return;
 
 	if( variable.length >= 1 )
 		{
 			for(var i = 0; i < variable.length; i++)
 			{
 				/* only if primary parameter is not present, set it as true for first array entry */ 
-				if ( i == 0 )
+				if ( i === 0 )
 					{
 						if ( !variable[i].primary )
 							variable[i].primary = true;
@@ -65,8 +69,9 @@ function setPrimaryAttribute ( variable )
  * http://portablecontacts.net/draft-spec.html#schema
  */
 var identity = {
-	vc_id       : null,                   /* Assigned by the session controller */
-	vc_auth_ts  : '1992-03-07',
+	vc_id       : '--none-yet--',                   /* Assigned by the session controller */
+	vc_auth_ts  : '--none-yet--',
+	auth_via    : '--none-yet--',
 	id          : '--random-default-id',
 	displayName : 'buddha is smiling',
 	name        : '--none-yet--',
@@ -78,51 +83,6 @@ var identity = {
 	emails      : [
 		{
 			value   : '--random@email.com--',
-			type    : '--none-yet',    /* work, home or other */
-			primary : true
-		},
-	],
-	phoneNumbers: [
-		{
-			value   : '--none-yet',
-			type    : '--none-yet',    /* work, home or other */
-			primary : true
-		},
-	],
-	photos      : [
-		{
-			value   : '--none-yet',
-			type    : '--none-yet',    /* work, home or other */
-			primary : true
-		},
-	],
-	addresses   : [
-		{
-			formatted     : '--none-yet',
-			streetAddress : '--none-yet',
-			locality      : '--none-yet',
-			region        : '--none-yet',
-			postalCode    : '--none-yet',
-			country       : '--none-yet',
-		},
-	],
-
-};
-
-
-
-var identity_defaultValues = {
-	
-	id          : '123456',
-	displayName : 'User123',
-	nickname    : 'user123',
-	birthday    : '12-12-12',
-	anniversary : 'never',
-	gender      : 'M/F',
-	utcOffset   : 'aj4',
-	emails      : [
-		{
-			value   : '--none-yet',
 			type    : '--none-yet',    /* work, home or other */
 			primary : true
 		},
