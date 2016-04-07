@@ -180,7 +180,7 @@ define(function(require) {
 			type            : file_obj.type,
 			size            : file_obj.size,
 			url             : data.access_url,
-			user_id         : 'arvind@authorgen.com',
+			user_id         : working_data.email,
 			vc_id           : f_handle_cached.identity.vc_id,
 			u_name          : f_handle_cached.identity.id,
 			removeafter     : 3600,
