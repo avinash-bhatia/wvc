@@ -30,10 +30,11 @@ define(function(require) {
 		 * Get my identity.
 		 * If this is an anonymous login, set a public account. Else ... */
 		log.info ('identity - ', f_handle_cached.identity);
-		var email = f_handle_cached.identity.email || 'test@wiziq.com';
+		var emails = f_handle_cached.identity.emails;
+		var email = emails ? emails[0].value : 'test@wiziq.com';
 		/*
 		 * A hack - clean this later */
-		if (f_handle_cached.identity.email === '-----')
+		if (email === '-----')
 			email = 'test@wiziq.com';
 
 		/*
