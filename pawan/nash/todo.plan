@@ -1,0 +1,25 @@
+
+/* 
+ * Nash - node administrator shell
+ * worker
+ * executor
+ * puts command to action
+ * */
+
+/*
+1. get ready to take calls  (state='up')
+
+2. accept acquire call only, give not acquired error to other requests
+
+
+3. on acquire-
+		start fluentd
+		process docker info, load docker image maybe
+		git folder-
+			checkout if not exists (clone)
+			else update code (pull)
+		start Khabri (collector) process passing it the address of prov-server  
+
+4. ready to accept all other calls as well  (state='acquired')
+	   	
+5. handling all other calls is such a simple task		-- but do handle them well		--keep the bar high 
