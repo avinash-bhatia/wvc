@@ -1,17 +1,35 @@
-var log		= require('common/log')  ;
+var log		= require('common/log')  ,
+	_events	= require('common/events') ;
 
 var session = {};
 
-session.start = function( req, res, next){
+function start (req, res, next) {
+	res.status = 102;		// send processing so as to avoid client timeout
 	res.send({ status : 'success', data : 'coming soon..'})
 };
 
-session.modify = function( req, res, next){
+function modify (req, res, next) {
+	res.status = 200;
 	res.send({ status : 'success', data : 'not coming soon..'});
 };
 
-session.kill = function( req, res, next){
+function kill (req, res, next) {
+	res.status = 200;
 	res.send({ status : 'success', data : 'not sure if it is even needed'});
 };
 
-module.exports = session;
+
+session.start = session.modify = session.kill = function (req, res, next) {
+	res.status = 403 ;			// forbidden
+	res.send({ status: 'error', data: 'node not yet acquired'});
+}
+
+/*
+_events.on('node_acquired', function(){
+	session.start	= start;
+	session.mofify	= modify;
+	session.kill	= kill;
+});
+*/
+
+module.exports = /*session;*/ { start: start, modify: modify, kill: kill };
